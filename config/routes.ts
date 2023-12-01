@@ -20,8 +20,8 @@ export const routes = [
     component: '@/pages/Access',
   },
   {
-    name: ' CRUD 示例',
-    path: '/table',
-    component: '@/pages/Table',
+    name: '用户管理',
+    path: '/user',
+    component: '@/pages/User',
   },
 ];

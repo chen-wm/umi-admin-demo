@@ -1,7 +1,11 @@
-﻿import type { RequestOptions } from '@@/plugin-request/request';
+﻿// @ts-ignore
+import type { RequestOptions } from '@@/plugin-request/request';
+// @ts-ignore
 import type { RequestConfig } from '@umijs/max';
 import { message } from 'antd';
-import { REQUEST_CODE } from './constants';
+// @ts-ignore
+import { history } from 'umi';
+import { REQUEST_CODE, REQUEST_PATH } from './constants';
 
 // 与后端约定的响应数据格式
 interface ResponseStructure {
@@ -50,15 +54,14 @@ export const errorConfig: RequestConfig = {
   // 请求拦截器
   requestInterceptors: [
     (config: RequestOptions) => {
+      config.url = `${REQUEST_PATH}${config.url}`;
+      // @ts-ignore
+      config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
       const token = localStorage.getItem('token');
-      if (token) {
-        if (config.headers) {
-          config.headers = {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          };
-        }
-      }
+      if (token)
+        // @ts-ignore
+        config.headers['Authorization'] = `Bearer ${token}`;
+      else history.push('/login');
       return { ...config };
     },
   ],

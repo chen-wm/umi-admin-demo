@@ -1,4 +1,5 @@
 import services from '@/services/demo';
+import { addUserList, getUserList } from '@/services/user';
 import {
   ActionType,
   FooterToolbar,
@@ -7,8 +8,9 @@ import {
   ProDescriptionsItemProps,
   ProTable,
 } from '@ant-design/pro-components';
+import { useRequest } from 'ahooks';
 import { Button, Divider, Drawer, message } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 
@@ -22,9 +24,9 @@ const { addUser, queryUserList, deleteUser, modifyUser } =
 const handleAdd = async (fields: API.UserInfo) => {
   const hide = message.loading('正在添加');
   try {
-    await addUser({ ...fields });
+    const data = JSON.stringify({ ...fields });
+    await addUserList(data);
     hide();
-    message.success('添加成功');
     return true;
   } catch (error) {
     hide();
@@ -82,7 +84,7 @@ const handleRemove = async (selectedRows: API.UserInfo[]) => {
   }
 };
 
-const TableList: React.FC<unknown> = () => {
+const UserTableList: React.FC<unknown> = () => {
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
@@ -90,10 +92,18 @@ const TableList: React.FC<unknown> = () => {
   const actionRef = useRef<ActionType>();
   const [row, setRow] = useState<API.UserInfo>();
   const [selectedRowsState, setSelectedRows] = useState<API.UserInfo[]>([]);
+  useRequest((data) => addUserList(data), {
+    manual: true,
+    onSuccess: () => {
+      message.success('添加成功');
+      getUserList({});
+    },
+  });
+
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
-      title: '名称',
-      dataIndex: 'name',
+      title: '用户名称',
+      dataIndex: 'username',
       tip: '名称是唯一的 key',
       formItemProps: {
         rules: [
@@ -105,18 +115,27 @@ const TableList: React.FC<unknown> = () => {
       },
     },
     {
-      title: '昵称',
-      dataIndex: 'nickName',
+      title: '邮箱',
+      dataIndex: 'email',
+      valueType: 'text',
+      formItemProps: {
+        rules: [
+          {
+            required: true,
+            message: '邮箱为必填项',
+          },
+        ],
+      },
+    },
+    {
+      title: '注册时间',
+      dataIndex: 'registerTime',
       valueType: 'text',
     },
     {
-      title: '性别',
-      dataIndex: 'gender',
-      hideInForm: true,
-      valueEnum: {
-        0: { text: '男', status: 'MALE' },
-        1: { text: '女', status: 'FEMALE' },
-      },
+      title: '权限',
+      dataIndex: 'role',
+      valueType: 'text',
     },
     {
       title: '操作',
@@ -138,11 +157,14 @@ const TableList: React.FC<unknown> = () => {
       ),
     },
   ];
-
+  const addColumns = useMemo(
+    () => columns.filter((item) => item.dataIndex !== 'registerTime'),
+    [columns],
+  );
   return (
     <PageContainer
       header={{
-        title: 'CRUD 示例',
+        title: '用户管理',
       }}
     >
       <ProTable<API.UserInfo>
@@ -161,20 +183,13 @@ const TableList: React.FC<unknown> = () => {
             新建
           </Button>,
         ]}
-        request={async (params, sorter, filter) => {
-          const { data, success } = await queryUserList({
-            ...params,
-            // FIXME: remove @ts-ignore
-            // @ts-ignore
-            sorter,
-            filter,
-          });
+        request={async () => {
+          const { data } = await getUserList({});
           return {
-            data: data?.list || [],
-            success,
+            data: data || [],
           };
         }}
-        columns={columns}
+        columns={columns as any}
         rowSelection={{
           onChange: (_, selectedRows) => setSelectedRows(selectedRows),
         }}
@@ -217,7 +232,7 @@ const TableList: React.FC<unknown> = () => {
           }}
           rowKey="id"
           type="form"
-          columns={columns}
+          columns={addColumns as any}
         />
       </CreateForm>
       {stepFormValues && Object.keys(stepFormValues).length ? (
@@ -267,4 +282,4 @@ const TableList: React.FC<unknown> = () => {
   );
 };
 
-export default TableList;
+export default UserTableList;

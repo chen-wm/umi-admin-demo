@@ -17,10 +17,10 @@
     "@ant-design/pro-components": "^2.6.43",
     "@ant-design/use-emotion-css": "1.0.4",
     "@umijs/max": "^4.0.83",
+    "ahooks": "^3.7.8",
     "antd": "^5.11.2",
     "classnames": "^2.3.2",
-    "qs": "^6.11.2",
-    "ahooks": "^3.7.8"
+    "qs": "^6.11.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.38",
