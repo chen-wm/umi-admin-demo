@@ -1,5 +1,5 @@
 export const DEFAULT_NAME = 'Umi Max';
-export const REQUEST_PATH = '/api/auth/user';
+export const REQUEST_PATH = '/api/auth';
 
 export enum SERVICE_METHODS {
   GET = 'GET',
