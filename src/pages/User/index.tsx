@@ -1,5 +1,5 @@
 import services from '@/services/demo';
-import { addUserList, getUserList } from '@/services/user';
+import { addUserList, deleteUserList, getUserList } from '@/services/user';
 import {
   ActionType,
   FooterToolbar,
@@ -278,6 +278,14 @@ const UserTableList: React.FC<unknown> = () => {
           />
         )}
       </Drawer>
+      <Button
+        onClick={async () => {
+          const data = JSON.stringify({ id: 5 });
+          await deleteUserList(data);
+        }}
+      >
+        delete
+      </Button>
     </PageContainer>
   );
 };
