@@ -1,3 +1,4 @@
+import { REQUEST_CODE } from '@/constants';
 import services from '@/services/demo';
 import { addUserList, deleteUserList, getUserList } from '@/services/user';
 import {
@@ -9,7 +10,9 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { useRequest } from 'ahooks';
-import { Button, Divider, Drawer, message } from 'antd';
+import { Button, Divider, Drawer, Popconfirm, message } from 'antd';
+// @ts-ignore
+import qs from 'qs';
 import React, { useMemo, useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
@@ -85,6 +88,7 @@ const handleRemove = async (selectedRows: API.UserInfo[]) => {
 };
 
 const UserTableList: React.FC<unknown> = () => {
+  const [tableData, setTableData] = useState([]);
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
@@ -92,14 +96,32 @@ const UserTableList: React.FC<unknown> = () => {
   const actionRef = useRef<ActionType>();
   const [row, setRow] = useState<API.UserInfo>();
   const [selectedRowsState, setSelectedRows] = useState<API.UserInfo[]>([]);
+  const { runAsync: initUserList } = useRequest(
+    (data) => getUserList({ ...data }),
+    {
+      manual: true,
+      onSuccess: (res) => {
+        setTableData(res.data);
+      },
+    },
+  );
   useRequest((data) => addUserList(data), {
     manual: true,
     onSuccess: () => {
       message.success('添加成功');
-      getUserList({});
+      initUserList({});
     },
   });
 
+  const deleteHandle = async ({ id }: { id: number }) => {
+    const data = qs.stringify({ id });
+    const res = await deleteUserList(data);
+    if (res.code === REQUEST_CODE.SUCCESS) {
+      message.success(res.message);
+      initUserList({});
+    }
+  };
+  // const listRequest = useMemo(() => function, []);
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
       title: '用户名称',
@@ -141,18 +163,29 @@ const UserTableList: React.FC<unknown> = () => {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
-      render: (_, record) => (
+      render: (_, record: any) => (
         <>
-          <a
+          <Button
+            type="link"
             onClick={() => {
               handleUpdateModalVisible(true);
               setStepFormValues(record);
             }}
           >
             配置
-          </a>
+          </Button>
           <Divider type="vertical" />
-          <a href="">订阅警报</a>
+          <Button type="link">订阅警报</Button>
+          <Divider type="vertical" />
+          <Popconfirm
+            title="Delete the task"
+            description="Are you sure to delete this item?"
+            onConfirm={() => deleteHandle(record)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button type="link">删除</Button>
+          </Popconfirm>
         </>
       ),
     },
@@ -183,12 +216,7 @@ const UserTableList: React.FC<unknown> = () => {
             新建
           </Button>,
         ]}
-        request={async () => {
-          const { data } = await getUserList({});
-          return {
-            data: data || [],
-          };
-        }}
+        dataSource={tableData}
         columns={columns as any}
         rowSelection={{
           onChange: (_, selectedRows) => setSelectedRows(selectedRows),
@@ -278,14 +306,6 @@ const UserTableList: React.FC<unknown> = () => {
           />
         )}
       </Drawer>
-      <Button
-        onClick={async () => {
-          const data = JSON.stringify({ id: 5 });
-          await deleteUserList(data);
-        }}
-      >
-        delete
-      </Button>
     </PageContainer>
   );
 };

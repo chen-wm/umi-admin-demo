@@ -8,9 +8,8 @@ import { errorConfig } from '@/requestErrorConfig';
 import { logout } from '@/services/login';
 import { useRequest } from 'ahooks';
 import { message } from 'antd';
-import './app.css';
-// @ts-ignore
 import { history } from 'umi';
+import './app.css';
 
 export async function getInitialState(): Promise<{ name: string }> {
   return { name: 'umi admin' };
